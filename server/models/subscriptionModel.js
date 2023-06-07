@@ -1,9 +1,9 @@
 const mongoose = require("mongoose");
 
 const subscriptionSchema = mongoose.Schema({
-    salonId: {
+    salonOwnerId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Salon"
+        ref: "SalonOwner"
     },
     startDate: {
         type: Date,
@@ -15,10 +15,14 @@ const subscriptionSchema = mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['ACTIVE', 'EXPIRED', 'CANCELLED']
+        enum: ['ACTIVE', 'EXPIRED', 'CANCELLED', 'PENDING APPROVAL', 'CANCELLED BY ADMIN']
+    },
+    paymentStatus: {
+        type: String,
+        enum: ['PENDING', 'COMPLETE', 'FAILED']
     }
 }, { timestamps: true });
 
-const subscriptionModel=mongoose.model("Subscription",subscriptionSchema)
+const subscriptionModel = mongoose.model("Subscription", subscriptionSchema)
 
-module.exports=subscriptionModel;
+module.exports = subscriptionModel;

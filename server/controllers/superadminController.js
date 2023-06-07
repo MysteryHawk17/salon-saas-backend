@@ -1,8 +1,11 @@
 const superAdminDb = require("../models/superadminModel");
+const subscriptionDB = require("../models/subscriptionModel");
+const salonOwnerDB = require("../models/salonOwnerModel")
 const response = require("../middlewares/responseMiddlewares.js");
 const asynchandler = require("express-async-handler");
 const bcrypt = require("bcryptjs")
 const jwt = require('../utils/jwt')
+const sendmail = require("../utils/sendmail");
 
 const test = asynchandler(async (req, res) => {
     response.successResponse(res, '', 'Superadmin routes established')
@@ -34,14 +37,14 @@ const createAdmin = asynchandler(async (req, res) => {
         const savedAdmin = await newAdmin.save();
 
         const token = jwt(savedAdmin._id);
-        const { password, createdAt, updatedAt, ...other } = savedAdmin._doc;
+        const { createdAt, updatedAt, ...other } = savedAdmin._doc;
 
 
         const data = {
             other,
             token: token
         }
-        if (savedUser) {
+        if (savedAdmin) {
             response.successResponse(res, data, "Admin created Successfully")
         }
         else {
@@ -82,5 +85,115 @@ const loginAdmin = asynchandler(async (req, res) => {
     }
 })
 
+const getAllSubscriptions = asynchandler(async (req, res) => {
+    const status = req.query.status;
 
-module.exports = { test ,createAdmin,loginAdmin};
+    const queryObj = {};
+    if (status) {
+        queryObj.status = status;
+    }
+    const findSubscriptions = await subscriptionDB.find(queryObj).populate("salonOwnerId");
+    if (findSubscriptions) {
+        response.successResponse(res, findSubscriptions, 'fetched the subscriptions');
+    }
+    else {
+        response.internalServerError(res, 'Cannot fetch the subscriptions');
+    }
+})
+
+const changeSubscriptionStatus = asynchandler(async (req, res) => {
+    const { subscriptionId } = req.params;
+    const { status } = req.body;
+    if (!subscriptionId || !status) {
+        response.validationError(res, 'Parametes not enough for updating the field');
+        return;
+    }
+    const findSubscription = await subscriptionDB.findById({ _id: subscriptionId }).populate("salonOwnerId");
+    if (findSubscription) {
+        const updatedSubscription = await subscriptionDB.findByIdAndUpdate({ _id: subscriptionId }, {
+            status: status
+        }, { new: true });
+        if (updatedSubscription) {
+
+            const subject = "UPDATES REGARDING YOUR SUBSCRIPTION "
+            const send_to = findSubscription.salonOwnerId.email
+            const sent_from = process.env.EMAIL_USER
+            if (status === 'ACTIVE') {
+                const message =
+                    `<h2>Hello ${findSubscription.salonOwnerId.name}</h2>
+        <p>This is to inform you that your subscription request to our platform has been approved.</p>
+        <p>Please use the specified login creadentials to login into the plateform and enjoy its services.</p>
+        <p><h2>email:</h2>${findSubscription.salonOwnerId.email}</p>
+        <p><h2>password:</h2>${findSubscription.salonOwnerId.password}</p>
+        <p>Regards</p>`;
+                try {
+                    await sendmail(subject, message, send_to, sent_from);
+                    response.successResponse(res, '', "Successfully sent the mail");
+                } catch {
+                    response.internalServerError(res, 'Not able to send the mail');
+                }
+
+            }
+            else if (status === 'CANCELLED BY ADMIN'){
+                const message = `<h2>Hello ${findSubscription.salonOwnerId.name}</h2>
+        <p>This is to inform you that your subscription request to our platform has unfortunately been cancelled..</p>
+        <p>We are sorry for this unfortunate incident.</p>
+        <p>If you still wish to get a subscritiop please write us at </p>
+        <p>${process.env.EMAIL}    </p>
+        <p>Regards</p>`
+                try {
+                    await sendmail(subject, message, send_to, sent_from);
+                    response.successResponse(res, '', "Successfully sent the mail");
+                } catch {
+                    response.internalServerError(res, 'Not able to send the mail');
+                }
+            }
+        }
+        else {
+            response.internalServerError(res, 'Failed to update the subscription ');
+        }
+    }
+    else {
+        response.notFoundError(res, "Subscription not found");
+    }
+
+})
+
+const getASubscription = asynchandler(async (req, res) => {
+    const { subscriptionId } = req.params;
+    if (!subscriptionId) {
+        response.validationError(res, 'Invalid parameter');
+        return;
+    }
+    const findSubscription = await subscriptionDB.findById({ _id: subscriptionId }).populate("salonOwnerId");
+    if (findSubscription) {
+        response.successResponse(res, findSubscription, 'Successfully fetched the subscriptions');
+    }
+    else {
+        response.notFoundError(res, 'Cannot find the specified subscription');
+    }
+})
+const getAllOwners = asynchandler(async (req, res) => {
+    const findAllOwners = await salonOwnerDB.find({}).populate("subscriptionId");
+    if (findAllOwners) {
+        response.successResponse(res, findAllOwners, "successfully fetched all the owners");
+    }
+    else {
+        response.internalServerError(res, "failed to fetch all the owners");
+    }
+})
+const getASalonOwner = asynchandler(async (req, res) => {
+    const { id } = req.params;
+    if (!id) {
+        response.validationError(res, 'Invalid parameter');
+        return;
+    }
+    const findSalonOwner = await salonOwnerDB.findById({ _id: id }).populate("subscriptionId");
+    if (findSalonOwner) {
+        response.successResponse(res, findSalonOwner, 'Successfully fetched the subscriptions');
+    }
+    else {
+        response.notFoundError(res, 'Cannot find the specified subscription');
+    }
+})
+module.exports = { test, createAdmin, loginAdmin, getASalonOwner, getASubscription, getAllOwners, getAllSubscriptions, changeSubscriptionStatus };

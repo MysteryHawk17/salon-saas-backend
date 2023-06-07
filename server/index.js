@@ -9,6 +9,7 @@ const bodyParser = require("body-parser");
 //routes imports
 const superAdminRoutes=require('./routes/superadminroute')
 const salonOwnerRotes=require("./routes/salonOwnerRoutes")
+const subscriptionRoutes=require("./routes/subscriptionRoutes")
 //middlewares
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -18,6 +19,7 @@ app.use(cors());
 //route middlewares
 app.use("/api/superadmin",superAdminRoutes)
 app.use("/api/salonowner",salonOwnerRotes);
+app.use("/api/subscription",subscriptionRoutes);
 //server test route
 app.get("/", (req, res) => {
     res.status(200).json({ message: "Saloon server is running" })
