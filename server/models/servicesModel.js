@@ -30,7 +30,7 @@ const serviceSchema = mongoose.Schema({
         type: String,
         required: true
     }
-})
+},{timestamps:true})
 
 const serviceModel = mongoose.model("Service", serviceSchema);
 

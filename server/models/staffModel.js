@@ -24,61 +24,61 @@ const staffSchema = mongoose.Schema({
             required: true
         },
         end: {
-            type:String,
-        required:true
+            type: String,
+            required: true
         }
     },
     salary: {
-        type:Number,
-        required:true
+        type: Number,
+        required: true
     },
     emergencyDetails: {
         contactNo: {
-            type:Number,
-            required:true
+            type: Number,
+            required: true
         },
         name: {
-            type:String,
-            required:true
+            type: String,
+            required: true
         },
         address: {
-            type:Object,
-            required:true
+            type: Object,
+            required: true
         }
     },
     userName: {
-        type:String,
-        unique:true
+        type: String,
+        unique: true
     },
     password: {
-        type:String,
+        type: String,
 
     },
     gender: {
-        type:String,
-        required:true
+        type: String,
+        required: true
     },
     dateOfJoining: {
-        type:String
+        type: String
     },
     userType: {
-        type:String,
+        type: String,
     },
     department: {
-        type:String,
-        required:true
+        type: String,
+        required: true
     },
     displayImg: {
-        type:String,
-        required:true
+        type: String,
+
     },
     idProof: {
-        type:String,
-        required:true
-    }
-})
+        type: String,
 
-const staffModel=mongoose.model("Staff",staffSchema);
-module.exports=staffModel;
+    }
+}, { timestamps: true })
+
+const staffModel = mongoose.model("Staff", staffSchema);
+module.exports = staffModel;
 
 

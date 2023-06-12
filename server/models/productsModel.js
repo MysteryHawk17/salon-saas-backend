@@ -25,7 +25,7 @@ const productsSchema=mongoose.Schema({
         type:Number,
         required:true
     }
-})
+},{timestamps:true})
 
 const productModel=mongoose.model("Product",productsSchema);
 module.exports=productModel;

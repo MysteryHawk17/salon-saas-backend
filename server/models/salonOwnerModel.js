@@ -45,7 +45,7 @@ const salonOwnerSchema = mongoose.Schema({
             }
         }
     ]
-})
+},{timestamps:true})
 
 const salonOwnerModel = mongoose.model("SalonOwner", salonOwnerSchema)
 module.exports = salonOwnerModel;
