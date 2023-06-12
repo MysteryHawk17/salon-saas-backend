@@ -1,4 +1,4 @@
-const appointmentDB = require("../models/appointmenModel");
+const appointmentDB = require("../models/appointmentModel");
 const clientDB = require("../models/clientModel");
 const serviceDB = require("../models/servicesModel")
 const asynchandler = require("express-async-handler");

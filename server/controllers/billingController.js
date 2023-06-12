@@ -11,26 +11,8 @@ const test = asynchandler(async (req, res) => {
 
 const createBill = asynchandler(async (req, res) => {
     const { clientName, clientNumber, quantity, timeOfBilling, price, billStatus, paymentDetails, serviceProvider, serviceFor, serviceSelected, durationOfAppointment, appointmentStatus, giveRewardPoints, subTotal, discount, totalAmount, paidDues, advancedGiven } = req.body;
-    console.log(!clientName)
-    console.log(!clientNumber)
-    console.log(!quantity)
-    console.log(!timeOfBilling)
-    console.log(!price)
-    console.log(!billStatus)
-    console.log(!serviceProvider)
-    console.log(!serviceFor)
-    console.log(!serviceSelected)
-    console.log(!durationOfAppointment)
-    console.log(!appointmentStatus)
-    console.log(!giveRewardPoints)
-    console.log(!subTotal)
-    console.log(!discount)
-    console.log(!totalAmount)
-    console.log(!paidDues)
-    console.log(!advancedGiven)
-    console.log(req.body);
-    console.log(paidDues);
-    if (!clientName || !clientNumber || !quantity || !timeOfBilling || !price || !billStatus || !serviceProvider || !serviceFor || !serviceSelected || !durationOfAppointment || !appointmentStatus || !giveRewardPoints || !subTotal || !discount || !totalAmount || paidDues === undefined || paidDues === null||!advancedGiven) {
+
+    if (!clientName || !clientNumber || !quantity || !timeOfBilling || !price || !billStatus || !serviceProvider || !serviceFor || !serviceSelected || !durationOfAppointment || !appointmentStatus || !giveRewardPoints || !subTotal || !discount || !totalAmount || paidDues === undefined || paidDues === null || !advancedGiven) {
         response.validationError(res, 'Fill in all the details');
         return;
     }
