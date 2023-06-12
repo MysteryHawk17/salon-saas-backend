@@ -18,6 +18,9 @@ const appointmentSchema = mongoose.Schema({
         type: String,
         required: true
     },
+    dateOfAppointment: {
+        type: String,
+    },
     discount: {
         type: Number
     },
@@ -36,31 +39,31 @@ const appointmentSchema = mongoose.Schema({
     durationOfAppointment: {
         type: Object,
     },
-    appointmentStatus:{
-        type:String,
-        required:true
+    appointmentStatus: {
+        type: String,
+        required: true
     },
-    totalAmount:{
-        type:Number,
-        required:true
+    totalAmount: {
+        type: Number,
+        required: true
     },
-    paidDues:{
-        type:Number,
-        required:true
+    paidDues: {
+        type: Number,
+        required: true
     },
-    advancedGiven:{
-        type:Number,
-        required:true
+    advancedGiven: {
+        type: Number,
+        required: true
     },
-    subTotal:{
-        type:Number,
-        required:true
+    subTotal: {
+        type: Number,
+        required: true
     },
-    giveRewardPoints:{
-        type:Boolean,
-        default:false
+    giveRewardPoints: {
+        type: Boolean,
+        default: false
     }
-},{timestamps:true})
+}, { timestamps: true })
 
 const appointmentModel = mongoose.model("Appointment", appointmentSchema);
 

@@ -9,25 +9,31 @@ const test = asynchandler(async (req, res) => {
 })
 
 const createAppointment = asynchandler(async (req, res) => {
-    const { clientName, clientNumber, timeOfAppointment, sourceOfAppointment, serviceProvider, serviceFor, serviceSelected, durationOfAppointment, appointmentStatus, giveRewardPoints, subTotal, discount, totalAmount, paidDues, advancedGiven } = req.body;
+    const { clientName, clientNumber, timeOfAppointment, sourceOfAppointment, serviceProvider, serviceFor, serviceSelected, durationOfAppointment, appointmentStatus, giveRewardPoints, subTotal, discount, totalAmount, paidDues, advancedGiven, dateOfAppointment } = req.body;
     console.log(req.body);
-    // if (!clientName ||
-    //     !clientNumber ||
-    //     !timeOfAppointment ||
-    //     !sourceOfAppointment ||
-    //     !discount ||
-    //     !serviceProvider ||
-    //     !serviceFor ||
-    //     !serviceSelected ||
-    //     !durationOfAppointment ||
-    //     !appointmentStatus ||
-    //     !giveRewardPoints ||
-    //     !totalAmount ||
-    //     !paidDues ||
-    //     !advancedGiven ||
-    //     !subTotal) {
-    //     return response.validationError(res, 'Please enter the required details');
-    // }
+    if (!clientName ||
+        !clientNumber ||
+        !timeOfAppointment ||
+        !sourceOfAppointment ||
+        !serviceProvider ||
+        !serviceFor ||
+        !serviceSelected ||
+        !durationOfAppointment ||
+        !appointmentStatus ||
+        !giveRewardPoints ||
+        subTotal === undefined ||
+        subTotal === null ||
+        discount === undefined ||
+        discount === null ||
+        totalAmount === undefined ||
+        totalAmount === null ||
+        paidDues === undefined ||
+        paidDues === null ||
+        advancedGiven === undefined ||
+        advancedGiven == null ||
+        !dateOfAppointment) {
+        return response.validationError(res, 'Please enter the required details');
+    }
     const newAppointment = new appointmentDB({
         clientName,
         clientNumber,
@@ -43,7 +49,8 @@ const createAppointment = asynchandler(async (req, res) => {
         discount,
         totalAmount,
         paidDues,
-        advancedGiven
+        advancedGiven,
+        dateOfAppointment
     })
     const savedAppointment = await newAppointment.save();
     const updateClient = await clientDB.findOneAndUpdate({ clientNumber: clientNumber }, {
@@ -111,7 +118,7 @@ const updateAppointmentStatus = asynchandler(async (req, res) => {
 
 const updateAppointmentDetails = asynchandler(async (req, res) => {
     const { appointmentId } = req.params;
-    const { timeOfAppointment, serviceProvider, serviceFor, serviceSelected, durationOfAppointment, giveRewardPoints, subtotal, discount, totalAmount, paidDues, advancedGiven } = req.body;
+    const { timeOfAppointment, serviceProvider, serviceFor, serviceSelected, durationOfAppointment, giveRewardPoints, subtotal, discount, totalAmount, paidDues, advancedGiven, dateOfAppointment } = req.body;
     console.log(req.body);
     const findAppointment = await appointmentDB.findById({ _id: appointmentId });
     if (findAppointment) {
@@ -148,6 +155,9 @@ const updateAppointmentDetails = asynchandler(async (req, res) => {
         }
         if (advancedGiven) {
             updateData.advancedGiven = advancedGiven
+        }
+        if (dateOfAppointment) {
+            updateData.dateOfAppointment = dateOfAppointment
         }
         const updatedAppointmentStatus = await appointmentDB.findByIdAndUpdate({ _id: appointmentId }, updateData, { new: true });
         if (updatedAppointmentStatus) {

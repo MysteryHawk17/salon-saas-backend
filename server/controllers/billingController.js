@@ -12,7 +12,7 @@ const test = asynchandler(async (req, res) => {
 const createBill = asynchandler(async (req, res) => {
     const { clientName, clientNumber, quantity, timeOfBilling, price, billStatus, paymentDetails, serviceProvider, serviceFor, serviceSelected, durationOfAppointment, appointmentStatus, giveRewardPoints, subTotal, discount, totalAmount, paidDues, advancedGiven } = req.body;
 
-    if (!clientName || !clientNumber || !quantity || !timeOfBilling || !price || !billStatus || !serviceProvider || !serviceFor || !serviceSelected || !durationOfAppointment || !appointmentStatus || !giveRewardPoints || !subTotal || !discount || !totalAmount || paidDues === undefined || paidDues === null || !advancedGiven) {
+    if (!clientName || !clientNumber || !quantity || !timeOfBilling || !price || !billStatus || !serviceProvider || !serviceFor || !serviceSelected || !durationOfAppointment || !appointmentStatus || !giveRewardPoints || subTotal === undefined || subTotal === null || discount === undefined || discount === null || totalAmount === undefined || totalAmount === null || paidDues === undefined || paidDues === null || advancedGiven===undefined||advancedGiven==null) {
         response.validationError(res, 'Fill in all the details');
         return;
     }
@@ -70,10 +70,14 @@ const createBill = asynchandler(async (req, res) => {
 
 })
 const getAllBills = asynchandler(async (req, res) => {
-    const { page, limit, clientNumber } = req.query;
+    const { page, limit, billStatus } = req.query;
+    const queryObj = {};
+    if (billStatus) {
+        queryObj.billStatus = billStatus
+    }
     if (!page && !limit) {
 
-        const allData = await billingDB.find().populate("serviceProvider").populate("serviceSelected");
+        const allData = await billingDB.find(queryObj).populate("serviceProvider").populate("serviceSelected");
         if (allData) {
             response.successResponse(res, allData, "Successfully fetched all the bills");
 
@@ -84,7 +88,7 @@ const getAllBills = asynchandler(async (req, res) => {
     }
     else if (!page) {
 
-        const limitedResults = await billingDB.find().limit(limit).populate("serviceProvider").populate("serviceSelected");
+        const limitedResults = await billingDB.find(queryObj).limit(limit).populate("serviceProvider").populate("serviceSelected");
         if (limitedResults) {
             response.successResponse(res, limitedResults, 'Successfully fetched the results');
         }
@@ -95,7 +99,7 @@ const getAllBills = asynchandler(async (req, res) => {
     }
     else if (page && limit) {
 
-        const allData = await billingDB.find().populate("serviceProvider").populate("serviceSelected");
+        const allData = await billingDB.find(queryObj).populate("serviceProvider").populate("serviceSelected");
 
         if (allData) {
             const startIndex = (page - 1) * limit;
@@ -138,7 +142,7 @@ const getTotalSalesAmount = asynchandler(async (req, res) => {
         {
             $group: {
                 _id: null,
-                totalPaidAmounts: { $sum: '$paidDues' }
+                totalPaidAmounts: { $sum: '$totalAmount' }
             }
         }
     ]);

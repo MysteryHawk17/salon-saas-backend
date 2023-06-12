@@ -37,7 +37,14 @@ const createClient = asynchandler(async (req, res) => {
 const getAllClient = asynchandler(async (req, res) => {
     const { page, limit } = req.query;
     if (!page && !limit) {
-        const allData = await clientDB.find().populate("membershipDetails").populate("appointmentDetails");
+        const allData = await clientDB.find().populate("membershipDetails").populate({
+            path: 'appointmentDetails',
+            populate: {
+                path: 'serviceSelected serviceProvider',
+
+            }
+        })
+
         if (allData) {
             response.successResponse(res, allData, "Successfully fetched all the clients");
 
@@ -47,7 +54,13 @@ const getAllClient = asynchandler(async (req, res) => {
         }
     }
     else if (!page) {
-        const limitedResults = await clientDB.find().limit(limit).populate("membershipDetails").populate("appointmentDetails");
+        const limitedResults = await clientDB.find().limit(limit).populate("membershipDetails").populate({
+            path: 'appointmentDetails',
+            populate: {
+                path: 'serviceSelected serviceProvider',
+
+            }
+        })
         if (limitedResults) {
             response.successResponse(res, limitedResults, 'Successfully fetched the results');
         }
@@ -57,7 +70,13 @@ const getAllClient = asynchandler(async (req, res) => {
 
     }
     else if (page && limit) {
-        const allData = await clientDB.find().populate("membershipDetails").populate("appointmentDetails");
+        const allData = await clientDB.find().populate("membershipDetails").populate({
+            path: 'appointmentDetails',
+            populate: {
+                path: 'serviceSelected serviceProvider',
+
+            }
+        })
 
         if (allData) {
             const startIndex = (page - 1) * limit;
@@ -80,7 +99,13 @@ const getClient = asynchandler(async (req, res) => {
     if (!id) {
         return response.validationError(res, 'Error in finding the client without id');
     }
-    const findClient = await clientDB.findById({ _id: id }).populate("membershipDetails").populate("appointmentDetails");
+    const findClient = await clientDB.findById({ _id: id }).populate("membershipDetails").populate({
+        path: 'appointmentDetails',
+        populate: {
+            path: 'serviceSelected serviceProvider',
+
+        }
+    })
     if (findClient) {
         response.successResponse(res, findClient, 'Successfully found the client');
     }
