@@ -9,8 +9,8 @@ const test = asynchandler(async (req, res) => {
 })
 
 const createService = asynchandler(async (req, res) => {
-    const { serviceName, category, duration, price, membershipPrice, rewardPoints, serviceFor } = req.body;
-    if (!serviceName || !category || !duration || !price || !membershipPrice || !rewardPoints || !serviceFor) {
+    const { serviceName, category, duration, price, membershipPrice, rewardPoints, serviceFor, branchDetails } = req.body;
+    if (!serviceName || !category || !duration || !price || !membershipPrice || !rewardPoints || !serviceFor || !branchDetails) {
         response.validationError(res, 'Please enter all the services');
     }
     const newService = new serviceDB({
@@ -20,7 +20,8 @@ const createService = asynchandler(async (req, res) => {
         price: price,
         membershipPrice: membershipPrice,
         rewardPoints: rewardPoints,
-        serviceFor: serviceFor
+        serviceFor: serviceFor,
+        branchDetails: branchDetails
     })
     const savedService = await newService.save();
     if (savedService) {
@@ -35,7 +36,7 @@ const createService = asynchandler(async (req, res) => {
 const getAllServices = asynchandler(async (req, res) => {
     const { page, limit } = req.query;
     if (!page && !limit) {
-        const allData = await serviceDB.find();
+        const allData = await serviceDB.find().populate("branchDetails");
         if (allData) {
             response.successResponse(res, allData, "Successfully fetched all the services");
 
@@ -45,7 +46,7 @@ const getAllServices = asynchandler(async (req, res) => {
         }
     }
     else if (!page) {
-        const limitedResults = await serviceDB.find().limit(limit);
+        const limitedResults = await serviceDB.find().populate("branchDetails").limit(limit);
         if (limitedResults) {
             response.successResponse(res, limitedResults, 'Successfully fetched the results');
         }
@@ -55,7 +56,7 @@ const getAllServices = asynchandler(async (req, res) => {
 
     }
     else if (page && limit) {
-        const allData = await serviceDB.find();
+        const allData = await serviceDB.find().populate("branchDetails");
 
         if (allData) {
             const startIndex = (page - 1) * limit;
@@ -77,7 +78,7 @@ const getAService = asynchandler(async (req, res) => {
     if (!serviceId) {
         return response.validationError(res, 'Cannot find the service without its id');
     }
-    const findService = await serviceDB.findById({ _id: serviceId });
+    const findService = await serviceDB.findById({ _id: serviceId }).populate("branchDetails");
     if (findService) {
         response.successResponse(res, findService, 'Successfully fetched the data');
     }
@@ -90,7 +91,7 @@ const deleteService = asynchandler(async (req, res) => {
     if (!serviceId) {
         return response.validationError(res, 'Cannot find Service without its id');
     }
-    const findService = await serviceDB.findById({ _id: serviceId });
+    const findService = await serviceDB.findById({ _id: serviceId }).populate("branchDetails");
     if (findService) {
         const deletedService = await serviceDB.findByIdAndDelete({ _id: serviceId });
         if (deletedService) {
@@ -112,7 +113,7 @@ const updateService = asynchandler(async (req, res) => {
     if (!serviceId) {
         return response.validationError(res, 'Cannot find Service without its id');
     }
-    const findService = await serviceDB.findById({ _id: serviceId });
+    const findService = await serviceDB.findById({ _id: serviceId }).populate("branchDetails");
     if (findService) {
         const updateData = {};
         const { serviceName, category, duration, price, membershipPrice, rewardPoints, serviceFor } = req.body;
@@ -152,20 +153,65 @@ const updateService = asynchandler(async (req, res) => {
     }
 })
 
-const searchService=asynchandler(async(req,res)=>{
-    const{serviceName}=req.query;
-    const queryObj={};
-    if(serviceName){
-        queryObj.serviceName={$regex:serviceName,$options:'i'};
+const searchService = asynchandler(async (req, res) => {
+    const { serviceName } = req.query;
+    const queryObj = {};
+    if (serviceName) {
+        queryObj.serviceName = { $regex: serviceName, $options: 'i' };
     }
-    const findReselts=await serviceDB.find(queryObj);
-    if(findReselts){
-        response.successResponse(res,findReselts,'Fetched the searched results');
+    const findReselts = await serviceDB.find(queryObj).populate("branchDetails");
+    if (findReselts) {
+        response.successResponse(res, findReselts, 'Fetched the searched results');
 
     }
-    else{
-        response.internalServerError(res,'Failed to fetch the results');
+    else {
+        response.internalServerError(res, 'Failed to fetch the results');
     }
 })
 
-module.exports = { test,createService,getAllServices,getAService,updateService ,deleteService,searchService};
+const getServicesByBranch = asynchandler(async (req, res) => {
+    const { branchId } = req.params;
+    if (branchId == ':branchId') {
+        return response.validationError(res, "Cannot get a branch without its id");
+    }
+    const { page, limit } = req.query;
+    if (!page && !limit) {
+        const allData = await serviceDB.find({ branchDetails: branchId }).populate("branchDetails");
+        if (allData) {
+            response.successResponse(res, allData, "Successfully fetched all the datas");
+
+        }
+        else {
+            response.internalServerError(res, 'Error in fetching all the datas');
+        }
+    }
+    else if (!page) {
+        const limitedResults = await serviceDB.find({ branchDetails: branchId }).limit(limit).populate("branchDetails");
+        if (limitedResults) {
+            response.successResponse(res, limitedResults, 'Successfully fetched the results');
+        }
+        else {
+            response.internalServerError(res, 'Failed to fetch the responses');
+        }
+
+    }
+    else if (page && limit) {
+        const allData = await serviceDB.find({ branchDetails: branchId }).populate("branchDetails");
+
+        if (allData) {
+            const startIndex = (page - 1) * limit;
+            const endIndex = page * limit;
+            const result = allData.slice(startIndex, endIndex);
+            const finalResult = {
+                result: result,
+                totalPage: Math.ceil(allData.length / limit)
+            }
+            response.successResponse(res, finalResult, 'Fetched the data succeessfully');
+        }
+        else {
+            response.internalServerError(res, 'Unable to fetch the data');
+        }
+    }
+})
+
+module.exports = { test, createService, getAllServices, getAService, updateService, deleteService, searchService,getServicesByBranch };

@@ -9,7 +9,7 @@ const test = asynchandler(async (req, res) => {
 })
 
 const createAppointment = asynchandler(async (req, res) => {
-    const { clientName, clientNumber, timeOfAppointment, sourceOfAppointment, serviceProvider, serviceFor, serviceSelected, durationOfAppointment, appointmentStatus, giveRewardPoints, subTotal, discount, totalAmount, paidDues, advancedGiven, dateOfAppointment } = req.body;
+    const { clientName, clientNumber, timeOfAppointment, sourceOfAppointment, serviceProvider, serviceFor, serviceSelected, durationOfAppointment, appointmentStatus, giveRewardPoints, subTotal, discount, totalAmount, paidDues, advancedGiven, dateOfAppointment, branchDetails } = req.body;
     console.log(req.body);
     if (!clientName ||
         !clientNumber ||
@@ -21,6 +21,7 @@ const createAppointment = asynchandler(async (req, res) => {
         !durationOfAppointment ||
         !appointmentStatus ||
         !giveRewardPoints ||
+        !branchDetails ||
         subTotal === undefined ||
         subTotal === null ||
         discount === undefined ||
@@ -50,7 +51,8 @@ const createAppointment = asynchandler(async (req, res) => {
         totalAmount,
         paidDues,
         advancedGiven,
-        dateOfAppointment
+        dateOfAppointment,
+        branchDetails
     })
     const savedAppointment = await newAppointment.save();
     const updateClient = await clientDB.findOneAndUpdate({ clientNumber: clientNumber }, {
@@ -75,7 +77,7 @@ const getPrice = asynchandler(async (req, res) => {
         return response.validationError(res, 'Please enter all the details');
 
     }
-    const findClient = await clientDB.findOne({ clientNumber: clientNumber }).populate('membershipDetails');
+    const findClient = await clientDB.findOne({ clientNumber: clientNumber }).populate('membershipDetails').populate("branchDetails");
     if (!findClient) {
         return response.validationError(res, 'Client doesnot exist');
     }
@@ -175,7 +177,7 @@ const updateAppointmentDetails = asynchandler(async (req, res) => {
 const getAllAppointment = asynchandler(async (req, res) => {
     const { page, limit } = req.query;
     if (!page && !limit) {
-        const allData = await appointmentDB.find().populate("serviceProvider").populate("serviceSelected");
+        const allData = await appointmentDB.find().populate("serviceProvider").populate("serviceSelected").populate("branchDetails");
         if (allData) {
             response.successResponse(res, allData, "Successfully fetched all the appointments");
 
@@ -185,7 +187,7 @@ const getAllAppointment = asynchandler(async (req, res) => {
         }
     }
     else if (!page) {
-        const limitedResults = await appointmentDB.find().limit(limit).populate("serviceProvider").populate("serviceSelected");
+        const limitedResults = await appointmentDB.find().limit(limit).populate("serviceProvider").populate("serviceSelected").populate("branchDetails");
         if (limitedResults) {
             response.successResponse(res, limitedResults, 'Successfully fetched the results');
         }
@@ -195,7 +197,7 @@ const getAllAppointment = asynchandler(async (req, res) => {
 
     }
     else if (page && limit) {
-        const allData = await appointmentDB.find().populate("serviceProvider").populate("serviceSelected");
+        const allData = await appointmentDB.find().populate("serviceProvider").populate("serviceSelected").populate("branchDetails");
 
         if (allData) {
             const startIndex = (page - 1) * limit;
@@ -217,7 +219,7 @@ const getParticularAppointment = asynchandler(async (req, res) => {
     if (!appointmentId) {
         return response.validationError(res, 'Cannot find an appointment without its id ');
     }
-    const findAppointment = await appointmentDB.findById({ _id: appointmentId });
+    const findAppointment = await appointmentDB.findById({ _id: appointmentId }).populate("branchDetails").populate("serviceProvider").populate("serviceSelected");
     if (findAppointment) {
         response.successResponse(res, findAppointment, 'Successfully found the appointment');
     }
@@ -230,7 +232,7 @@ const getUsersAppointment = asynchandler(async (req, res) => {
     const { clientNumber } = req.params;
     const { page, limit } = req.query;
     if (!page && !limit) {
-        const allData = await appointmentDB.find({ clientNumber: clientNumber }).populate("serviceProvider").populate("serviceSelected");
+        const allData = await appointmentDB.find({ clientNumber: clientNumber }).populate("serviceProvider").populate("serviceSelected").populate("branchDetails");
         if (allData) {
             response.successResponse(res, allData, "Successfully fetched all the appointments");
 
@@ -240,7 +242,7 @@ const getUsersAppointment = asynchandler(async (req, res) => {
         }
     }
     else if (!page) {
-        const limitedResults = await appointmentDB.find().limit(limit).populate("serviceProvider").populate("serviceSelected");
+        const limitedResults = await appointmentDB.find().limit(limit).populate("serviceProvider").populate("serviceSelected").populate("branchDetails");
         if (limitedResults) {
             response.successResponse(res, limitedResults, 'Successfully fetched the results');
         }
@@ -250,7 +252,7 @@ const getUsersAppointment = asynchandler(async (req, res) => {
 
     }
     else if (page && limit) {
-        const allData = await appointmentDB.find().populate("serviceProvider").populate("serviceSelected");
+        const allData = await appointmentDB.find().populate("serviceProvider").populate("serviceSelected").populate("branchDetails");
 
         if (allData) {
             const startIndex = (page - 1) * limit;
@@ -279,7 +281,7 @@ const searchAPIAppointment = asynchandler(async (req, res) => {
     if (clientNumber) {
         queryObj.clientNumber = clientNumber;
     }
-    const findAppointment = await appointmentDB.find(queryObj);
+    const findAppointment = await appointmentDB.find(queryObj).populate("serviceProvider").populate("serviceSelected").populate("branchDetails");
     if (findAppointment) {
         response.successResponse(res, findAppointment, 'Successfully fetched the data');
     }
@@ -287,4 +289,51 @@ const searchAPIAppointment = asynchandler(async (req, res) => {
         response.internalServerError(res, 'Failed to fetch the datas');
     }
 })
-module.exports = { test, createAppointment, getPrice, updateAppointmentDetails, updateAppointmentStatus, getAllAppointment, getParticularAppointment, getUsersAppointment, searchAPIAppointment };
+
+
+const getAppointmentsByBranch = asynchandler(async (req, res) => {
+    const { branchId } = req.params;
+    if (branchId == ':branchId') {
+        return response.validationError(res, "Cannot get a branch without its id");
+    }
+    const { page, limit } = req.query;
+    if (!page && !limit) {
+        const allData = await appointmentDB.find({ branchDetails: branchId }).populate("serviceProvider").populate("serviceSelected").populate("branchDetails");
+        if (allData) {
+            response.successResponse(res, allData, "Successfully fetched all the appointments");
+
+        }
+        else {
+            response.internalServerError(res, 'Error in fetching all the appointments');
+        }
+    }
+    else if (!page) {
+        const limitedResults = await appointmentDB.find({ branchDetails: branchId }).limit(limit).populate("serviceProvider").populate("serviceSelected").populate("branchDetails");
+        if (limitedResults) {
+            response.successResponse(res, limitedResults, 'Successfully fetched the results');
+        }
+        else {
+            response.internalServerError(res, 'Failed to fetch the responses');
+        }
+
+    }
+    else if (page && limit) {
+        const allData = await appointmentDB.find({ branchDetails: branchId }).populate("serviceProvider").populate("serviceSelected").populate("branchDetails");
+
+        if (allData) {
+            const startIndex = (page - 1) * limit;
+            const endIndex = page * limit;
+            const result = allData.slice(startIndex, endIndex);
+            const finalResult = {
+                result: result,
+                totalPage: Math.ceil(allData.length / limit)
+            }
+            response.successResponse(res, finalResult, 'Fetched the data succeessfully');
+        }
+        else {
+            response.internalServerError(res, 'Unable to fetch the data');
+        }
+    }
+
+})
+module.exports = { test, createAppointment, getPrice, updateAppointmentDetails, updateAppointmentStatus, getAllAppointment, getParticularAppointment, getUsersAppointment, searchAPIAppointment ,getAppointmentsByBranch};

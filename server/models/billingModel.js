@@ -70,6 +70,10 @@ const billingSchema = mongoose.Schema({
     },
     paymentDetails: {
         type: Object
+    },
+    branchDetails:{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:"Branch"
     }
 }, { timestamps: true })
 

@@ -40,7 +40,7 @@ const getAllClient = asynchandler(async (req, res) => {
         const allData = await clientDB.find().populate("membershipDetails").populate({
             path: 'appointmentDetails',
             populate: {
-                path: 'serviceSelected serviceProvider',
+                path: 'serviceSelected serviceProvider branchDetails',
 
             }
         })

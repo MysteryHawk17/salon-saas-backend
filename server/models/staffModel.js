@@ -75,6 +75,10 @@ const staffSchema = mongoose.Schema({
     idProof: {
         type: String,
 
+    },
+    branchDetails:{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:"Branch"
     }
 }, { timestamps: true })
 

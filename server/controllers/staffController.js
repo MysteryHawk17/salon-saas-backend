@@ -9,9 +9,9 @@ const test = asynchandler(async (req, res) => {
 })
 
 const createStaff = asynchandler(async (req, res) => {
-    const { name, dob, phone, mail, workingHrs, salary, emergencyDetails, userName, password, gender, dateOfJoining, userType, department } = req.body;
+    const { name, dob, phone, mail, workingHrs, salary, emergencyDetails, userName, password, gender, dateOfJoining, userType, department ,branchDetails} = req.body;
 
-    if (!name || !dob || !phone || !mail || !workingHrs || !salary || !emergencyDetails || !userName || !password || !gender || !dateOfJoining || !userType || !department) {
+    if (!name || !dob || !phone || !mail || !workingHrs || !salary || !emergencyDetails || !userName || !password || !gender || !dateOfJoining || !userType || !department||!branchDetails) {
         response.validationError(res, 'Please enter the details properly');
         return;
     }
@@ -51,7 +51,8 @@ const createStaff = asynchandler(async (req, res) => {
         userType: userType,
         department: department,
         displayImg: displayImg,
-        idProof: idProof
+        idProof: idProof,
+        branchDetails:branchDetails
     })
     const savedStaff = await newStaff.save();
     if (savedStaff) {
@@ -66,7 +67,7 @@ const createStaff = asynchandler(async (req, res) => {
 const getAllStaff = asynchandler(async (req, res) => {
     const { page, limit } = req.query;
     if (!page && !limit) {
-        const allData = await staffDB.find();
+        const allData = await staffDB.find().populate("branchDetails");
         if (allData) {
             response.successResponse(res, allData, "Successfully fetched all the details");
 
@@ -76,7 +77,7 @@ const getAllStaff = asynchandler(async (req, res) => {
         }
     }
     else if (!page) {
-        const limitedResults = await staffDB.find().limit(limit);
+        const limitedResults = await staffDB.find().populate("branchDetails").limit(limit);
         if (limitedResults) {
             response.successResponse(res, limitedResults, 'Successfully fetched the results');
         }
@@ -86,7 +87,7 @@ const getAllStaff = asynchandler(async (req, res) => {
 
     }
     else if (page && limit) {
-        const allData = await staffDB.find();
+        const allData = await staffDB.find().populate("branchDetails");
 
         if (allData) {
             const startIndex = (page - 1) * limit;
@@ -109,7 +110,7 @@ const getAStaff = asynchandler(async (req, res) => {
     if (!staffId) {
         return response.validationError(res, 'Cannot find staff without its id');
     }
-    const findStaff = await staffDB.findById({ _id: staffId });
+    const findStaff = await staffDB.findById({ _id: staffId }).populate("branchDetails");
     if (findStaff) {
         response.successResponse(res, findStaff, 'Successfully fetched the data');
     }
@@ -123,7 +124,7 @@ const deleteStaff = asynchandler(async (req, res) => {
     if (!staffId) {
         return response.validationError(res, 'Cannot find staff without its id');
     }
-    const findStaff = await staffDB.findById({ _id: staffId });
+    const findStaff = await staffDB.findById({ _id: staffId }).populate("branchDetails");
     if (findStaff) {
         const deleteFromCloud = await cloudinary.uploader.destroy(findStaff.idProof)
         const deleteFromCloud2 = await cloudinary.uploader.destroy(findStaff.displayImg);
@@ -147,7 +148,7 @@ const updateStaff = asynchandler(async (req, res) => {
     if (!staffId) {
         return response.validationError(res, 'Cannot find staff without its id');
     }
-    const findStaff = await staffDB.findById({ _id: staffId });
+    const findStaff = await staffDB.findById({ _id: staffId }).populate("branchDetails");
     if (findStaff) {
         const updateData = {};
         const { name, dob, phone, mail, workingHrs, salary, emergencyDetails, gender, dateOfJoining, userType, department } = req.body;
@@ -202,7 +203,7 @@ const updateProfilePic = asynchandler(async (req, res) => {
     if (!staffId) {
         return response.validationError(res, 'Cannot find staff without its id');
     }
-    const findStaff = await staffDB.findById({ _id: staffId });
+    const findStaff = await staffDB.findById({ _id: staffId }).populate("branchDetails");
     if (findStaff) {
         if (req.files) {
             const deletePreviousData = await cloudinary.uploader.destroy(findStaff.displayImg);
@@ -228,7 +229,7 @@ const updateIdProof = asynchandler(async (req, res) => {
     if (!staffId) {
         return response.validationError(res, 'Cannot find staff without its id');
     }
-    const findStaff = await staffDB.findById({ _id: staffId });
+    const findStaff = await staffDB.findById({ _id: staffId }).populate("branchDetails");
     if (findStaff) {
         if (req.files) {
             const deletePreviousData = await cloudinary.uploader.destroy(findStaff.idProof);
@@ -258,7 +259,7 @@ const searchStaff=asynchandler(async(req,res)=>{
     if(userName){
         queryObj.userName={$regex:userName,$options:'i'};
     }
-    const findReselts=await serviceDB.find(queryObj);
+    const findReselts=await staffDB.find(queryObj).populate("branchDetails");
     if(findReselts){
         response.successResponse(res,findReselts,'Fetched the searched results');
 
@@ -267,4 +268,49 @@ const searchStaff=asynchandler(async(req,res)=>{
         response.internalServerError(res,'Failed to fetch the results');
     }
 })
-module.exports = { test, createStaff, getAllStaff, getAStaff, updateIdProof, updateProfilePic, updateStaff, deleteStaff ,searchStaff}
+const getStaffsByBranch = asynchandler(async (req, res) => {
+    const { branchId } = req.params;
+    if (branchId == ':branchId') {
+        return response.validationError(res, "Cannot get a branch without its id");
+    }
+    const { page, limit } = req.query;
+    if (!page && !limit) {
+        const allData = await staffDB.find({ branchDetails: branchId }).populate("branchDetails");
+        if (allData) {
+            response.successResponse(res, allData, "Successfully fetched all the datas");
+
+        }
+        else {
+            response.internalServerError(res, 'Error in fetching all the datas');
+        }
+    }
+    else if (!page) {
+        const limitedResults = await staffDB.find({ branchDetails: branchId }).limit(limit).populate("branchDetails");
+        if (limitedResults) {
+            response.successResponse(res, limitedResults, 'Successfully fetched the results');
+        }
+        else {
+            response.internalServerError(res, 'Failed to fetch the responses');
+        }
+
+    }
+    else if (page && limit) {
+        const allData = await staffDB.find({ branchDetails: branchId }).populate("branchDetails");
+
+        if (allData) {
+            const startIndex = (page - 1) * limit;
+            const endIndex = page * limit;
+            const result = allData.slice(startIndex, endIndex);
+            const finalResult = {
+                result: result,
+                totalPage: Math.ceil(allData.length / limit)
+            }
+            response.successResponse(res, finalResult, 'Fetched the data succeessfully');
+        }
+        else {
+            response.internalServerError(res, 'Unable to fetch the data');
+        }
+    }
+})
+
+module.exports = { test, createStaff, getAllStaff, getAStaff, updateIdProof, updateProfilePic, updateStaff, deleteStaff ,searchStaff,getStaffsByBranch}

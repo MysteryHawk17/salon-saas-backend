@@ -62,6 +62,10 @@ const appointmentSchema = mongoose.Schema({
     giveRewardPoints: {
         type: Boolean,
         default: false
+    },
+    branchDetails:{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:"Branch"
     }
 }, { timestamps: true })
 

@@ -1,5 +1,5 @@
 
-const { test, createStaff, getAllStaff, getAStaff, updateStaff, updateProfilePic, updateIdProof, deleteStaff, searchStaff } = require("../controllers/staffController");
+const { test, createStaff, getAllStaff, getAStaff, updateStaff, updateProfilePic, updateIdProof, deleteStaff, searchStaff, getStaffsByBranch } = require("../controllers/staffController");
 
 const router = require("express").Router();
 const upload = require("../utils/multer")
@@ -14,6 +14,7 @@ router.patch("/editprofilepic/:staffId", upload.array("images"), updateProfilePi
 router.patch('/editidproof/:staffId', upload.array("images"), updateIdProof);
 router.delete('/deletestaff/:staffId', deleteStaff);
 router.get("/searchstaff", searchStaff)
+router.get("/getallstaffbybranch/:branchId", getStaffsByBranch);
 
 
 

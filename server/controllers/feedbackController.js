@@ -53,7 +53,13 @@ const getAllFeedbacks = asynchandler(async (req, res) => {
     }
     else if (page && limit) {
 
-        const allData = await feedbackDB.find().populate("appointment")
+        const allData = await feedbackDB.find().populate({
+            path: 'appointmentId',
+            populate: {
+                path: 'serviceSelected serviceProvider branchDetails',
+
+            }
+        })
 
         if (allData) {
             const startIndex = (page - 1) * limit;
@@ -72,20 +78,26 @@ const getAllFeedbacks = asynchandler(async (req, res) => {
 })
 
 
-const getAFeedback=asynchandler(async(req,res)=>{
-    const{feedbackId}=req.params;
+const getAFeedback = asynchandler(async (req, res) => {
+    const { feedbackId } = req.params;
     console.log(feedbackId)
-    if(feedbackId==':feedbackId'){
-        response.validationError(res,'Cannot get a data without its id');
+    if (feedbackId == ':feedbackId') {
+        response.validationError(res, 'Cannot get a data without its id');
         return;
     }
-    const findResult=await feedbackDB.findById({_id:feedbackId}).populate("appointmentId");
-    if(findResult){
-        response.successResponse(res,findResult,"Fetched the feedback successfully")
+    const findResult = await feedbackDB.findById({ _id: feedbackId }).populate({
+        path: 'appointmentId',
+        populate: {
+            path: 'serviceSelected serviceProvider branchDetails',
+
+        }
+    });
+    if (findResult) {
+        response.successResponse(res, findResult, "Fetched the feedback successfully")
     }
-    else{
-        response.notFoundError(res,'Cannot find the specified feedback')
+    else {
+        response.notFoundError(res, 'Cannot find the specified feedback')
     }
 })
 
-module.exports = { test,createFeedback,getAllFeedbacks,getAFeedback };
+module.exports = { test, createFeedback, getAllFeedbacks, getAFeedback };

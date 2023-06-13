@@ -1,4 +1,4 @@
-const { test, createAppointment, updateAppointmentStatus, getPrice, getAllAppointment, getParticularAppointment, searchAPIAppointment, updateAppointmentDetails } = require("../controllers/appointmentController");
+const { test, createAppointment, updateAppointmentStatus, getPrice, getAllAppointment, getParticularAppointment, searchAPIAppointment, updateAppointmentDetails, getAppointmentsByBranch } = require("../controllers/appointmentController");
 
 const router=require("express").Router();
 
@@ -12,6 +12,6 @@ router.get('/getprice',getPrice)
 router.get("/getallappointments",getAllAppointment);
 router.get("/getappointment/:appointmentId",getParticularAppointment);
 router.get("/searchappointment",searchAPIAppointment);
-
+router.get('/getappointmentbybranch/:branchId',getAppointmentsByBranch);
 
 module.exports=router;

@@ -18,6 +18,7 @@ const clientRoutes = require("./routes/clientRoutes");
 const appointmentRoutes = require("./routes/appointmentRoutes");
 const billingRoutes = require("./routes/billingRoutes");
 const feedbackRoutes = require("./routes/feedbackRoutes")
+const branchRoutes=require("./routes/branchRoutes");
 //middlewares
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -36,6 +37,7 @@ app.use("/api/client", clientRoutes);
 app.use("/api/appointment", appointmentRoutes);
 app.use("/api/billing", billingRoutes)
 app.use("/api/feedback", feedbackRoutes);
+app.use("/api/branch",branchRoutes)
 //server test route
 app.get("/", (req, res) => {
     res.status(200).json({ message: "Saloon server is running" })

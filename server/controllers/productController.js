@@ -8,8 +8,8 @@ const test = asynchandler(async (req, res) => {
 })
 
 const createProduct = asynchandler(async (req, res) => {
-    const { productName, mrp, volume, unit, barcode, rewardPoints } = req.body;
-    if (!productName || !mrp || !volume || !unit || !barcode || !rewardPoints) {
+    const { productName, mrp, volume, unit, barcode, rewardPoints, branchDetails } = req.body;
+    if (!productName || !mrp || !volume || !unit || !barcode || !rewardPoints || !branchDetails) {
         response.validationError(res, 'Please enter all the fields');
         return;
     }
@@ -19,7 +19,8 @@ const createProduct = asynchandler(async (req, res) => {
         volume,
         unit,
         barcode,
-        rewardPoints
+        rewardPoints,
+        branchDetails
     })
     const savedProduct = await newProduct.save();
     if (savedProduct) {
@@ -33,7 +34,7 @@ const createProduct = asynchandler(async (req, res) => {
 const getAllProducts = asynchandler(async (req, res) => {
     const { page, limit } = req.query;
     if (!page && !limit) {
-        const allData = await productDB.find();
+        const allData = await productDB.find().populate("branchDetails");
         if (allData) {
             response.successResponse(res, allData, "Successfully fetched all the products");
 
@@ -43,7 +44,7 @@ const getAllProducts = asynchandler(async (req, res) => {
         }
     }
     else if (!page) {
-        const limitedResults = await productDB.find().limit(limit);
+        const limitedResults = await productDB.find().limit(limit).populate("branchDetails");
         if (limitedResults) {
             response.successResponse(res, limitedResults, 'Successfully fetched the results');
         }
@@ -53,7 +54,7 @@ const getAllProducts = asynchandler(async (req, res) => {
 
     }
     else if (page && limit) {
-        const allData = await productDB.find();
+        const allData = await productDB.find().populate("branchDetails");
 
         if (allData) {
             const startIndex = (page - 1) * limit;
@@ -75,7 +76,7 @@ const getAProduct = asynchandler(async (req, res) => {
     if (!productId) {
         return response.validationError(res, 'Cannot find the product without its id');
     }
-    const findProduct = await productDB.findById({ _id: productId });
+    const findProduct = await productDB.findById({ _id: productId }).populate("branchDetails");
     if (findProduct) {
         response.successResponse(res, findProduct, 'Successfully fetched the data');
     }
@@ -88,7 +89,7 @@ const deleteProduct = asynchandler(async (req, res) => {
     if (!productId) {
         return response.validationError(res, 'Cannot find Product without its id');
     }
-    const findProduct = await productDB.findById({ _id: productId });
+    const findProduct = await productDB.findById({ _id: productId }).populate("branchDetails");
     if (findProduct) {
         const deletedProduct = await productDB.findByIdAndDelete({ _id: productId });
         if (deletedProduct) {
@@ -110,7 +111,7 @@ const updateProduct = asynchandler(async (req, res) => {
     if (!productId) {
         return response.validationError(res, 'Cannot find product without its id');
     }
-    const findProduct = await productDB.findById({ _id: productId });
+    const findProduct = await productDB.findById({ _id: productId }).populate("branchDetails");
     if (findProduct) {
         const updateData = {};
         const { productName, mrp, volume, unit, barcode, rewardPoints } = req.body;
@@ -156,7 +157,7 @@ const searchProduct = asynchandler(async (req, res) => {
     if (productName) {
         queryObj.productName = { $regex: productName, $options: 'i' };
     }
-    const findReselts = await productDB.find(queryObj);
+    const findReselts = await productDB.find(queryObj).populate("branchDetails");
     if (findReselts) {
         response.successResponse(res, findReselts, 'Fetched the searched results');
 
@@ -210,5 +211,48 @@ const updateQuantity = asynchandler(async (req, res) => {
 
 })
 
+const getProductByBranch = asynchandler(async (req, res) => {
+    const { branchId } = req.params;
+    if (branchId == ':branchId') {
+        return response.validationError(res, "Cannot get a branch without its id");
+    }
+    const { page, limit } = req.query;
+    if (!page && !limit) {
+        const allData = await productDB.find({ branchDetails: branchId }).populate("branchDetails");
+        if (allData) {
+            response.successResponse(res, allData, "Successfully fetched all the datas");
 
-module.exports = { test,createProduct,getAProduct,getAllProducts,deleteProduct,updateProduct,updateQuantity,searchProduct };
+        }
+        else {
+            response.internalServerError(res, 'Error in fetching all the datas');
+        }
+    }
+    else if (!page) {
+        const limitedResults = await productDB.find({ branchDetails: branchId }).limit(limit).populate("branchDetails");
+        if (limitedResults) {
+            response.successResponse(res, limitedResults, 'Successfully fetched the results');
+        }
+        else {
+            response.internalServerError(res, 'Failed to fetch the responses');
+        }
+
+    }
+    else if (page && limit) {
+        const allData = await productDB.find({ branchDetails: branchId }).populate("branchDetails");
+
+        if (allData) {
+            const startIndex = (page - 1) * limit;
+            const endIndex = page * limit;
+            const result = allData.slice(startIndex, endIndex);
+            const finalResult = {
+                result: result,
+                totalPage: Math.ceil(allData.length / limit)
+            }
+            response.successResponse(res, finalResult, 'Fetched the data succeessfully');
+        }
+        else {
+            response.internalServerError(res, 'Unable to fetch the data');
+        }
+    }
+})
+module.exports = { test, createProduct, getAProduct, getAllProducts, deleteProduct, updateProduct, updateQuantity, searchProduct ,getProductByBranch};

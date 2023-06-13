@@ -24,6 +24,10 @@ const productsSchema=mongoose.Schema({
     rewardPoints:{
         type:Number,
         required:true
+    },
+    branchDetails:{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:"Branch"
     }
 },{timestamps:true})
 

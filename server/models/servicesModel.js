@@ -29,6 +29,10 @@ const serviceSchema = mongoose.Schema({
     serviceFor: {
         type: String,
         required: true
+    },
+    branchDetails:{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:"Branch"
     }
 },{timestamps:true})
 

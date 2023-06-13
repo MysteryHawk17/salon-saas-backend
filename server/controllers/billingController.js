@@ -10,9 +10,9 @@ const test = asynchandler(async (req, res) => {
 })
 
 const createBill = asynchandler(async (req, res) => {
-    const { clientName, clientNumber, quantity, timeOfBilling, price, billStatus, paymentDetails, serviceProvider, serviceFor, serviceSelected, durationOfAppointment, appointmentStatus, giveRewardPoints, subTotal, discount, totalAmount, paidDues, advancedGiven } = req.body;
+    const { clientName, clientNumber, quantity, timeOfBilling, price, billStatus, paymentDetails, serviceProvider, serviceFor, serviceSelected, durationOfAppointment, appointmentStatus, giveRewardPoints, subTotal, discount, totalAmount, paidDues, advancedGiven, branchDetails } = req.body;
 
-    if (!clientName || !clientNumber || !quantity || !timeOfBilling || !price || !billStatus || !serviceProvider || !serviceFor || !serviceSelected || !durationOfAppointment || !appointmentStatus || !giveRewardPoints || subTotal === undefined || subTotal === null || discount === undefined || discount === null || totalAmount === undefined || totalAmount === null || paidDues === undefined || paidDues === null || advancedGiven===undefined||advancedGiven==null) {
+    if (!clientName || !clientNumber || !quantity || !timeOfBilling || !price || !billStatus || !serviceProvider || !serviceFor || !serviceSelected || !durationOfAppointment || !appointmentStatus || !giveRewardPoints || subTotal === undefined || subTotal === null || discount === undefined || discount === null || totalAmount === undefined || totalAmount === null || paidDues === undefined || paidDues === null || advancedGiven === undefined || advancedGiven == null || !branchDetails) {
         response.validationError(res, 'Fill in all the details');
         return;
     }
@@ -39,7 +39,8 @@ const createBill = asynchandler(async (req, res) => {
             discount,
             totalAmount,
             paidDues,
-            advancedGiven
+            advancedGiven,
+            branchDetails
         })
         const savedBill = await newBill.save();
         if (savedBill) {
@@ -77,7 +78,7 @@ const getAllBills = asynchandler(async (req, res) => {
     }
     if (!page && !limit) {
 
-        const allData = await billingDB.find(queryObj).populate("serviceProvider").populate("serviceSelected");
+        const allData = await billingDB.find(queryObj).populate("serviceProvider").populate("serviceSelected").populate("branchDetails");
         if (allData) {
             response.successResponse(res, allData, "Successfully fetched all the bills");
 
@@ -88,7 +89,7 @@ const getAllBills = asynchandler(async (req, res) => {
     }
     else if (!page) {
 
-        const limitedResults = await billingDB.find(queryObj).limit(limit).populate("serviceProvider").populate("serviceSelected");
+        const limitedResults = await billingDB.find(queryObj).limit(limit).populate("serviceProvider").populate("serviceSelected").populate("branchDetails");
         if (limitedResults) {
             response.successResponse(res, limitedResults, 'Successfully fetched the results');
         }
@@ -99,7 +100,7 @@ const getAllBills = asynchandler(async (req, res) => {
     }
     else if (page && limit) {
 
-        const allData = await billingDB.find(queryObj).populate("serviceProvider").populate("serviceSelected");
+        const allData = await billingDB.find(queryObj).populate("serviceProvider").populate("serviceSelected").populate("branchDetails");
 
         if (allData) {
             const startIndex = (page - 1) * limit;
@@ -123,7 +124,7 @@ const getAClientBill = asynchandler(async (req, res) => {
         response.validationError(res, 'Cannot get a clients bill without the number');
         return;
     }
-    const findAllBills = await billingDB.find({ clientNumber: clientNumber }).populate("serviceProvider").populate("serviceSelected");
+    const findAllBills = await billingDB.find({ clientNumber: clientNumber }).populate("serviceProvider").populate("serviceSelected").populate('branchDetails');
     if (findAllBills) {
         response.successResponse(res, findAllBills, 'Successfully fetched all the bills');
     }
@@ -319,7 +320,7 @@ const searchBillAPI = asynchandler(async (req, res) => {
     if (clientNumber) {
         queryObj.clientNumber = clientNumber;
     }
-    const findBill = await billingDB.find(queryObj);
+    const findBill = await billingDB.find(queryObj).populate("serviceProvider").populate("serviceSelected").populate('branchDetails');
     if (findBill) {
         response.successResponse(res, findBill, 'Successfully fetched the data');
     }
@@ -327,4 +328,48 @@ const searchBillAPI = asynchandler(async (req, res) => {
         response.internalServerError(res, 'Failed to fetch the datas');
     }
 })
-module.exports = { test, createBill, getAllBills, getAClientBill, getTotalSalesAmount, updateBillStatus, updateBillDetails, deleteBill, searchBillAPI };  
+const getBranchwiseBills = asynchandler(async (req, res) => {
+    const { branchId } = req.params;
+    if (branchId == ':branchId') {
+        return response.validationError(res, "Cannot get a branch without its id");
+    }
+    const { page, limit } = req.query;
+    if (!page && !limit) {
+        const allData = await billingDB.find({ branchDetails: branchId }).populate("serviceProvider").populate("serviceSelected").populate("branchDetails");
+        if (allData) {
+            response.successResponse(res, allData, "Successfully fetched all the datas");
+
+        }
+        else {
+            response.internalServerError(res, 'Error in fetching all the datas');
+        }
+    }
+    else if (!page) {
+        const limitedResults = await billingDB.find({ branchDetails: branchId }).limit(limit).populate("serviceProvider").populate("serviceSelected").populate("branchDetails");
+        if (limitedResults) {
+            response.successResponse(res, limitedResults, 'Successfully fetched the results');
+        }
+        else {
+            response.internalServerError(res, 'Failed to fetch the responses');
+        }
+
+    }
+    else if (page && limit) {
+        const allData = await billingDB.find({ branchDetails: branchId }).populate("serviceProvider").populate("serviceSelected").populate("branchDetails");
+
+        if (allData) {
+            const startIndex = (page - 1) * limit;
+            const endIndex = page * limit;
+            const result = allData.slice(startIndex, endIndex);
+            const finalResult = {
+                result: result,
+                totalPage: Math.ceil(allData.length / limit)
+            }
+            response.successResponse(res, finalResult, 'Fetched the data succeessfully');
+        }
+        else {
+            response.internalServerError(res, 'Unable to fetch the data');
+        }
+    }
+})
+module.exports = { test, createBill, getAllBills, getAClientBill, getTotalSalesAmount, updateBillStatus, updateBillDetails, deleteBill, searchBillAPI,getBranchwiseBills };  
