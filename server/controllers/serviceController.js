@@ -11,7 +11,7 @@ const test = asynchandler(async (req, res) => {
 const createService = asynchandler(async (req, res) => {
     const { serviceName, category, duration, price, membershipPrice, rewardPoints, serviceFor, branchDetails } = req.body;
     if (!serviceName || !category || !duration || !price || !membershipPrice || !rewardPoints || !serviceFor || !branchDetails) {
-        response.validationError(res, 'Please enter all the services');
+        response.validationError(res, 'Please enter all the fields');
     }
     const newService = new serviceDB({
         serviceName: serviceName,

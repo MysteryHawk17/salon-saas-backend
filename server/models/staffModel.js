@@ -41,10 +41,6 @@ const staffSchema = mongoose.Schema({
             type: String,
             required: true
         },
-        address: {
-            type: Object,
-            required: true
-        }
     },
     userName: {
         type: String,
