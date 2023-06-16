@@ -174,9 +174,13 @@ const getASubscription = asynchandler(async (req, res) => {
     }
 })
 const getAllOwners = asynchandler(async (req, res) => {
-    const findAllOwners = await salonOwnerDB.find({}).populate("subscriptionId");
+
+    const findAllOwners = await salonOwnerDB.find({}).populate("subscriptionId").populate("address");
+    const finalResult=findAllOwners.filter((e)=>{
+        return e.subscriptionId.status!=="PENDING"
+    })
     if (findAllOwners) {
-        response.successResponse(res, findAllOwners, "successfully fetched all the owners");
+        response.successResponse(res, finalResult, "successfully fetched all the owners");
     }
     else {
         response.internalServerError(res, "failed to fetch all the owners");
@@ -188,7 +192,7 @@ const getASalonOwner = asynchandler(async (req, res) => {
         response.validationError(res, 'Invalid parameter');
         return;
     }
-    const findSalonOwner = await salonOwnerDB.findById({ _id: id }).populate("subscriptionId");
+    const findSalonOwner = await salonOwnerDB.findById({ _id: id }).populate("subscriptionId").populate("address");
     if (findSalonOwner) {
         response.successResponse(res, findSalonOwner, 'Successfully fetched the subscriptions');
     }

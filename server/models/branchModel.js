@@ -1,6 +1,10 @@
 const mongoose=require("mongoose");
 
 const branchSchema=mongoose.Schema({
+    salonOwnerId:{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:"SalonOwner"
+    },
     branchName:{
         type:String,
         required:true

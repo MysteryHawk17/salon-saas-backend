@@ -1,4 +1,5 @@
 const branchDB = require("../models/branchModel");
+const ownerDB = require("../models/salonOwnerModel")
 const response = require("../middlewares/responseMiddlewares");
 const asynchandler = require("express-async-handler");
 
@@ -8,18 +9,23 @@ const test = asynchandler(async (req, res) => {
 
 
 const createBranch = asynchandler(async (req, res) => {
-    const { branchName, branchManagerName, poc, address } = req.body;
-    if (!branchName || !branchManagerName || poc == undefined || poc == null || !address) {
+    const { branchName, branchManagerName, poc, address, salonOwnerId } = req.body;
+    if (!branchName || !branchManagerName || poc == undefined || poc == null || !address||!salonOwnerId) {
         return response.validationError(res, "Please enter all the fields");
     }
     const newBranch = new branchDB({
         branchName: branchName,
         branchManagerName: branchManagerName,
         poc: poc,
-        address: address
+        address: address,
+        salonOwnerId: salonOwnerId
     })
     const savedBranch = await newBranch.save();
-    if (savedBranch) {
+    const findOwner = await ownerDB.findByIdAndUpdate({ _id: salonOwnerId }, {
+        $push: { address: savedBranch._id }
+    })
+    if (savedBranch&&findOwner) {
+
         response.successResponse(res, savedBranch, 'Saved brach successfully')
     }
     else {
@@ -141,4 +147,4 @@ const deleteBranch = asynchandler(async (req, res) => {
         response.notFoundError(res, 'Failed to fetch the branch ');
     }
 })
-module.exports = { test ,createBranch,getAllBranch,getABranch,updateBranch,deleteBranch};
+module.exports = { test, createBranch, getAllBranch, getABranch, updateBranch, deleteBranch };

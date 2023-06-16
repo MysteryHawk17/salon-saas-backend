@@ -32,19 +32,10 @@ const salonOwnerSchema = mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "Subscription"
     },
-    salonAddress:[
-        {
-            address:{
-                type:String,
-            },
-            city:{
-              type:String
-            },
-            pincode:{
-                type:Number
-            }
-        }
-    ]
+    address:[{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:"Branch"
+    }]
 },{timestamps:true})
 
 const salonOwnerModel = mongoose.model("SalonOwner", salonOwnerSchema)

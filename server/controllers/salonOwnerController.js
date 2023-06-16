@@ -62,22 +62,29 @@ const loginOwner = asynchandler(async (req, res) => {
         response.validationError(res, "Please fill in the details properly")
     }
     else {
-        const owner = await ownerDB.findOne({ email: email });
+        const owner = await ownerDB.findOne({ email: email }).populate("subscriptionId");
+        console.log(owner.subscriptionId.status)
         if (owner) {
-            // const comparePassword = await bcrypt.compare(password, owner.password);
-            if (owner.password==password) {
-                const token = jwt(owner._id);
-                const { password, createdAt, updatedAt, ...other } = owner._doc;
-                const data = {
-                    other,
-                    token: token
-                }
-                response.successResponse(res, data, "Login successful");
+            if (owner.subscriptionId.status !== 'PENDING') {
+                if (owner.password == password) {
+                    const token = jwt(owner._id);
+                    const { password, createdAt, updatedAt, ...other } = owner._doc;
+                    const data = {
+                        other,
+                        token: token
+                    }
+                    response.successResponse(res, data, "Login successful");
 
+                }
+                else {
+                    response.validationError(res, "Password incorrect");
+                }
             }
             else {
-                response.validationError(res, "Password incorrect");
+                response.errorResponse(res, 'Subsciption not active', 400);
             }
+            // const comparePassword = await bcrypt.compare(password, owner.password);
+
 
         }
         else {
@@ -131,8 +138,8 @@ const updateKyc = asynchandler(async (req, res) => {
         const uploadedData = await cloudinary.uploader.upload(req.file.path, {
             folder: "Salon"
         })
-        const index = findOwner.kyc.findIndex(e=>e.documentName===documentName)
-        
+        const index = findOwner.kyc.findIndex(e => e.documentName === documentName)
+
         console.log(index)
         if (index != -1) {
             findOwner.kyc.splice(index, 1);
